@@ -1,0 +1,16 @@
+{
+  "name": "food-waste-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "prisma:init": "prisma init --datasource-provider sqlite",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate": "prisma migrate dev"
+  },
+  "license": "ISC",
+  "dependencies": {
+    "@prisma/client": "^6.19.0",
+    "dotenv": "^16.4.5",
+    "prisma": "^6.19.0"
+  }
+}
