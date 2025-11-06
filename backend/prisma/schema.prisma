@@ -1,12 +1,123 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
 
-datasource db {
-  provider = "sqlite"
-  url      = env("DATABASE_URL")
+
+// Preferințe alimentare
+enum Preference {
+  OMNIVOR
+  VEGETARIAN
+  CARNIVOR
+  VEGAN
+  RAW_VEGAN
+  ALTCEVA
+}
+
+// Statusul revendicărilor
+enum ClaimStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+// Tabela principală: utilizatori
+model User {
+  id        Int        @id @default(autoincrement())
+  name      String
+  email     String     @unique
+  createdAt DateTime   @default(now())
+
+  // relație 1:N cu FoodItem (un utilizator are mai multe alimente)
+  items     FoodItem[]
+
+  // relație 1:N cu Friend (un utilizator are mai mulți prieteni)
+  friends   Friend[]
+
+  // relație 1:N cu Claim (un utilizator poate revendica mai multe produse)
+  claims    Claim[]    @relation("UserClaims")
+}
+
+//  Tabela prieteni
+model Friend {
+  id         Int      @id @default(autoincrement())
+
+  // foreign key către User (ownerId → id)
+  // fiecare prieten aparține unui utilizator (owner)
+  ownerId    Int
+  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name       String
+  preference Preference
+}
+
+//  Tabela categorii de alimente
+model Category {
+  id    Int        @id @default(autoincrement())
+  name  String     @unique
+
+  // relație 1:N cu FoodItem (o categorie are mai multe alimente)
+  items FoodItem[]
+}
+
+//  Tabela alimente (produse)
+model FoodItem {
+  id          Int        @id @default(autoincrement())
+
+  // foreign key către User (ownerId → id)
+  // fiecare aliment este adăugat de un utilizator
+  ownerId     Int
+  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+
+  name        String
+
+  // foreign key către Category (categoryId → id)
+  // un aliment aparține unei categorii (sau poate fi null)
+  categoryId  Int?
+  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  expiresOn   DateTime
+  isAvailable Boolean    @default(false)
+  notes       String?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  // relație 1:N cu Claim (un produs poate fi revendicat de mai mulți utilizatori)
+  claims      Claim[]
+
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([expiresOn])
+  @@index([isAvailable])
+}
+
+// Tabela revendicări
+model Claim {
+  id         Int         @id @default(autoincrement())
+
+  // foreign key către FoodItem (foodItemId → id)
+  // revendicarea se referă la un anumit aliment
+  foodItemId Int
+  foodItem   FoodItem    @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+
+  // foreign key către User (claimerId → id)
+  // utilizatorul care revendică produsul
+  claimerId  Int
+  claimer    User        @relation("UserClaims", fields: [claimerId], references: [id], onDelete: Cascade)
+
+  status     ClaimStatus @default(PENDING)
+  createdAt  DateTime    @default(now())
+
+  @@index([status])
+  @@index([claimerId])
+  @@unique([foodItemId, claimerId])
 }
