@@ -1,7 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-
 datasource db {
   provider = "sqlite"
   url      = env("DATABASE_URL")
@@ -11,7 +10,6 @@ generator client {
   provider = "prisma-client"
   output   = "../generated/prisma"
 }
-
 
 // Preferințe alimentare
 enum Preference {
@@ -23,8 +21,8 @@ enum Preference {
   ALTCEVA
 }
 
-// Statusul revendicărilor
-enum ClaimStatus {
+// Statusul cererilor (request)
+enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
@@ -32,19 +30,19 @@ enum ClaimStatus {
 
 // Tabela principală: utilizatori
 model User {
-  id        Int        @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  email     String     @unique
-  createdAt DateTime   @default(now())
+  email     String    @unique
+  createdAt DateTime  @default(now())
 
-  // relație 1:N cu FoodItem (un utilizator are mai multe alimente)
-  items     FoodItem[]
+  // relație 1:N cu Product (un utilizator are mai multe produse)
+  products  Product[]
 
   // relație 1:N cu Friend (un utilizator are mai mulți prieteni)
   friends   Friend[]
 
-  // relație 1:N cu Claim (un utilizator poate revendica mai multe produse)
-  claims    Claim[]    @relation("UserClaims")
+  // relație 1:N cu Request (un utilizator poate face mai multe cereri)
+  requests  Request[] @relation("UserRequests")
 }
 
 //  Tabela prieteni
@@ -62,26 +60,26 @@ model Friend {
 
 //  Tabela categorii de alimente
 model Category {
-  id    Int        @id @default(autoincrement())
-  name  String     @unique
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
 
-  // relație 1:N cu FoodItem (o categorie are mai multe alimente)
-  items FoodItem[]
+  // relație 1:N cu Product (o categorie are mai multe produse)
+  products Product[]
 }
 
-//  Tabela alimente (produse)
-model FoodItem {
+//  Tabela produse (alimente)
+model Product {
   id          Int        @id @default(autoincrement())
 
   // foreign key către User (ownerId → id)
-  // fiecare aliment este adăugat de un utilizator
+  // fiecare produs este adăugat de un utilizator
   ownerId     Int
   owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
 
   name        String
 
   // foreign key către Category (categoryId → id)
-  // un aliment aparține unei categorii (sau poate fi null)
+  // un produs aparține unei categorii (sau poate fi null)
   categoryId  Int?
   category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
 
@@ -91,8 +89,8 @@ model FoodItem {
   createdAt   DateTime   @default(now())
   updatedAt   DateTime   @updatedAt
 
-  // relație 1:N cu Claim (un produs poate fi revendicat de mai mulți utilizatori)
-  claims      Claim[]
+  // relație 1:N cu Request (un produs poate avea cereri de la mai mulți utilizatori)
+  requests    Request[]
 
   @@index([ownerId])
   @@index([categoryId])
@@ -100,24 +98,24 @@ model FoodItem {
   @@index([isAvailable])
 }
 
-// Tabela revendicări
-model Claim {
-  id         Int         @id @default(autoincrement())
+// Tabela cereri (request)
+model Request {
+  id         Int           @id @default(autoincrement())
 
-  // foreign key către FoodItem (foodItemId → id)
-  // revendicarea se referă la un anumit aliment
-  foodItemId Int
-  foodItem   FoodItem    @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+  // foreign key către Product (productId → id)
+  // cererea se referă la un anumit produs
+  productId  Int
+  product    Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
 
   // foreign key către User (claimerId → id)
-  // utilizatorul care revendică produsul
+  // utilizatorul care face cererea pentru produs
   claimerId  Int
-  claimer    User        @relation("UserClaims", fields: [claimerId], references: [id], onDelete: Cascade)
+  claimer    User          @relation("UserRequests", fields: [claimerId], references: [id], onDelete: Cascade)
 
-  status     ClaimStatus @default(PENDING)
-  createdAt  DateTime    @default(now())
+  status     RequestStatus @default(PENDING)
+  createdAt  DateTime      @default(now())
 
   @@index([status])
   @@index([claimerId])
-  @@unique([foodItemId, claimerId])
+  @@unique([productId, claimerId])
 }

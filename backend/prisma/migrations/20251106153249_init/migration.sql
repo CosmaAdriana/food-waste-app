@@ -22,7 +22,7 @@ CREATE TABLE "Category" (
 );
 
 -- CreateTable
-CREATE TABLE "FoodItem" (
+CREATE TABLE "Product" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "ownerId" INTEGER NOT NULL,
     "name" TEXT NOT NULL,
@@ -32,19 +32,19 @@ CREATE TABLE "FoodItem" (
     "notes" TEXT,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL,
-    CONSTRAINT "FoodItem_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "FoodItem_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE
+    CONSTRAINT "Product_ownerId_fkey" FOREIGN KEY ("ownerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Product_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE SET NULL ON UPDATE CASCADE
 );
 
 -- CreateTable
-CREATE TABLE "Claim" (
+CREATE TABLE "Request" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "foodItemId" INTEGER NOT NULL,
+    "productId" INTEGER NOT NULL,
     "claimerId" INTEGER NOT NULL,
     "status" TEXT NOT NULL DEFAULT 'PENDING',
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    CONSTRAINT "Claim_foodItemId_fkey" FOREIGN KEY ("foodItemId") REFERENCES "FoodItem" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
-    CONSTRAINT "Claim_claimerId_fkey" FOREIGN KEY ("claimerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "Request_productId_fkey" FOREIGN KEY ("productId") REFERENCES "Product" ("id") ON DELETE CASCADE ON UPDATE CASCADE,
+    CONSTRAINT "Request_claimerId_fkey" FOREIGN KEY ("claimerId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateIndex
@@ -54,22 +54,22 @@ CREATE UNIQUE INDEX "User_email_key" ON "User"("email");
 CREATE UNIQUE INDEX "Category_name_key" ON "Category"("name");
 
 -- CreateIndex
-CREATE INDEX "FoodItem_ownerId_idx" ON "FoodItem"("ownerId");
+CREATE INDEX "Product_ownerId_idx" ON "Product"("ownerId");
 
 -- CreateIndex
-CREATE INDEX "FoodItem_categoryId_idx" ON "FoodItem"("categoryId");
+CREATE INDEX "Product_categoryId_idx" ON "Product"("categoryId");
 
 -- CreateIndex
-CREATE INDEX "FoodItem_expiresOn_idx" ON "FoodItem"("expiresOn");
+CREATE INDEX "Product_expiresOn_idx" ON "Product"("expiresOn");
 
 -- CreateIndex
-CREATE INDEX "FoodItem_isAvailable_idx" ON "FoodItem"("isAvailable");
+CREATE INDEX "Product_isAvailable_idx" ON "Product"("isAvailable");
 
 -- CreateIndex
-CREATE INDEX "Claim_status_idx" ON "Claim"("status");
+CREATE INDEX "Request_status_idx" ON "Request"("status");
 
 -- CreateIndex
-CREATE INDEX "Claim_claimerId_idx" ON "Claim"("claimerId");
+CREATE INDEX "Request_claimerId_idx" ON "Request"("claimerId");
 
 -- CreateIndex
-CREATE UNIQUE INDEX "Claim_foodItemId_claimerId_key" ON "Claim"("foodItemId", "claimerId");
+CREATE UNIQUE INDEX "Request_productId_claimerId_key" ON "Request"("productId", "claimerId");
