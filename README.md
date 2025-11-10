@@ -13,7 +13,7 @@ Pîrnuță Alexandra – Frontend & Backend Developer
 # Tehnologii utilizate
 Backend: Node.js, Express
 ORM: Prisma
-Baza de date: SQLite sau PostgreSQL 
+Baza de date: PostgreSQL 
 Frontend: React (SPA)
 Mediu de dezvoltare: Visual Studio Code, GitHub
 
