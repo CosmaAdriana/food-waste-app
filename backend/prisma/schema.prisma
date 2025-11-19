@@ -1,17 +1,81 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
 
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
+model User {
+  id          Int          @id @default(autoincrement())
+  name        String
+  email       String       @unique
+  createdAt   DateTime     @default(now())
+  password    String
+  friendOf    Friendship[] @relation("FriendOf")
+  friendships Friendship[] @relation("UserFriendships")
+  products    Product[]
+  requests    Request[]    @relation("UserRequests")
 }
 
-// Preferințe alimentare
+model Friendship {
+  id         Int              @id @default(autoincrement())
+  userId     Int
+  friendId   Int
+  preference Preference?
+  status     FriendshipStatus @default(PENDING)
+  createdAt  DateTime         @default(now())
+  friend     User             @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  user       User             @relation("UserFriendships", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, friendId])
+  @@index([userId])
+  @@index([friendId])
+  @@index([status])
+}
+
+model Category {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  products Product[]
+}
+
+model Product {
+  id          Int       @id @default(autoincrement())
+  ownerId     Int
+  name        String
+  categoryId  Int?
+  expiresOn   DateTime
+  isAvailable Boolean   @default(false)
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  category    Category? @relation(fields: [categoryId], references: [id])
+  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  requests    Request[]
+
+  @@index([ownerId])
+  @@index([categoryId])
+  @@index([expiresOn])
+  @@index([isAvailable])
+}
+
+model Request {
+  id        Int           @id @default(autoincrement())
+  productId Int
+  claimerId Int
+  status    RequestStatus @default(PENDING)
+  createdAt DateTime      @default(now())
+  claimer   User          @relation("UserRequests", fields: [claimerId], references: [id], onDelete: Cascade)
+  product   Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, claimerId])
+  @@index([status])
+  @@index([claimerId])
+}
+
 enum Preference {
   OMNIVOR
   VEGETARIAN
@@ -21,101 +85,14 @@ enum Preference {
   ALTCEVA
 }
 
-// Statusul cererilor (request)
 enum RequestStatus {
   PENDING
   APPROVED
   REJECTED
 }
 
-// Tabela principală: utilizatori
-model User {
-  id        Int       @id @default(autoincrement())
-  name      String
-  email     String    @unique
-  createdAt DateTime  @default(now())
-
-  // relație 1:N cu Product (un utilizator are mai multe produse)
-  products  Product[]
-
-  // relație 1:N cu Friend (un utilizator are mai mulți prieteni)
-  friends   Friend[]
-
-  // relație 1:N cu Request (un utilizator poate face mai multe cereri)
-  requests  Request[] @relation("UserRequests")
-}
-
-//  Tabela prieteni
-model Friend {
-  id         Int      @id @default(autoincrement())
-
-  // foreign key către User (ownerId → id)
-  // fiecare prieten aparține unui utilizator (owner)
-  ownerId    Int
-  owner      User     @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  name       String
-  preference Preference
-}
-
-//  Tabela categorii de alimente
-model Category {
-  id       Int       @id @default(autoincrement())
-  name     String    @unique
-
-  // relație 1:N cu Product (o categorie are mai multe produse)
-  products Product[]
-}
-
-//  Tabela produse (alimente)
-model Product {
-  id          Int        @id @default(autoincrement())
-
-  // foreign key către User (ownerId → id)
-  // fiecare produs este adăugat de un utilizator
-  ownerId     Int
-  owner       User       @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-
-  name        String
-
-  // foreign key către Category (categoryId → id)
-  // un produs aparține unei categorii (sau poate fi null)
-  categoryId  Int?
-  category    Category?  @relation(fields: [categoryId], references: [id], onDelete: SetNull)
-
-  expiresOn   DateTime
-  isAvailable Boolean    @default(false)
-  notes       String?
-  createdAt   DateTime   @default(now())
-  updatedAt   DateTime   @updatedAt
-
-  // relație 1:N cu Request (un produs poate avea cereri de la mai mulți utilizatori)
-  requests    Request[]
-
-  @@index([ownerId])
-  @@index([categoryId])
-  @@index([expiresOn])
-  @@index([isAvailable])
-}
-
-// Tabela cereri (request)
-model Request {
-  id         Int           @id @default(autoincrement())
-
-  // foreign key către Product (productId → id)
-  // cererea se referă la un anumit produs
-  productId  Int
-  product    Product       @relation(fields: [productId], references: [id], onDelete: Cascade)
-
-  // foreign key către User (claimerId → id)
-  // utilizatorul care face cererea pentru produs
-  claimerId  Int
-  claimer    User          @relation("UserRequests", fields: [claimerId], references: [id], onDelete: Cascade)
-
-  status     RequestStatus @default(PENDING)
-  createdAt  DateTime      @default(now())
-
-  @@index([status])
-  @@index([claimerId])
-  @@unique([productId, claimerId])
+enum FriendshipStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
 }
