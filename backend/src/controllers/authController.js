@@ -102,6 +102,24 @@ export const login = async (req, res) => {
 
 export const logout = async (req, res) => {
   try {
+    const userId = req.session.userId;
+
+    if (!userId) {
+      return res.status(401).json({
+        error: 'Authentication required',
+        message: 'No active session found'
+      });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        id: true,
+        name: true,
+        email: true
+      }
+    });
+
     req.session.destroy((err) => {
       if (err) {
         console.error('Logout error:', err);
@@ -113,7 +131,8 @@ export const logout = async (req, res) => {
 
       res.clearCookie('connect.sid');
       res.status(200).json({
-        message: 'Logout successful'
+        message: 'Logout successful',
+        user: user
       });
     });
   } catch (error) {

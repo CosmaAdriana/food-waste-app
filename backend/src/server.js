@@ -7,6 +7,7 @@ import pg from 'pg';
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
+import friendRoutes from './routes/friendRoutes.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -46,6 +47,7 @@ app.use(
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
+app.use('/api/friends', friendRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
