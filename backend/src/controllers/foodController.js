@@ -280,8 +280,8 @@ export const getExpiringFoods = async (req, res) => {
       where: {
         ownerId: userId,
         expiresOn: {
-          gte: now,           
-          lte: threeDaysFromNow  
+          gte: now,
+          lte: threeDaysFromNow
         }
       },
       include: {
@@ -306,7 +306,7 @@ export const getExpiringFoods = async (req, res) => {
         }
       },
       orderBy: {
-        expiresOn: 'asc'  
+        expiresOn: 'asc'
       }
     });
 
@@ -320,6 +320,176 @@ export const getExpiringFoods = async (req, res) => {
     res.status(500).json({
       error: 'Internal server error',
       message: 'An error occurred while fetching expiring food items'
+    });
+  }
+};
+
+// POST /api/foods/:id/claim - Claim un produs disponibil
+export const claimFood = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.userId;
+
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'Food item not found'
+      });
+    }
+
+    if (product.ownerId === userId) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'You cannot claim your own food item'
+      });
+    }
+
+    if (!product.isAvailable) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'This food item is not available for claiming'
+      });
+    }
+
+    const friendship = await prisma.friendship.findFirst({
+      where: {
+        OR: [
+          { userId: userId, friendId: product.ownerId, status: 'ACCEPTED' },
+          { userId: product.ownerId, friendId: userId, status: 'ACCEPTED' }
+        ]
+      }
+    });
+
+    if (!friendship) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You must be friends with the owner to claim their food items'
+      });
+    }
+
+    const existingRequest = await prisma.request.findUnique({
+      where: {
+        productId_claimerId: {
+          productId: parseInt(id),
+          claimerId: userId
+        }
+      }
+    });
+
+    if (existingRequest) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: `You already have a ${existingRequest.status.toLowerCase()} request for this item`
+      });
+    }
+
+    const request = await prisma.request.create({
+      data: {
+        productId: parseInt(id),
+        claimerId: userId,
+        status: 'PENDING'
+      },
+      include: {
+        product: {
+          include: {
+            category: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        },
+        claimer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    res.status(201).json({
+      message: 'Claim request sent successfully',
+      request
+    });
+  } catch (error) {
+    console.error('Claim food error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'An error occurred while claiming food item'
+    });
+  }
+};
+
+// GET /api/foods/my-claims - Produsele carora le-am facut claim
+
+export const getMyClaims = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+    const { status } = req.query;
+
+    const whereClause = {
+      claimerId: userId
+    };
+
+    if (status) {
+      whereClause.status = status.toUpperCase();
+    }
+
+    const requests = await prisma.request.findMany({
+      where: whereClause,
+      include: {
+        product: {
+          include: {
+            category: true,
+            owner: {
+              select: {
+                id: true,
+                name: true,
+                email: true
+              }
+            }
+          }
+        },
+        claimer: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      },
+      orderBy: {
+        createdAt: 'desc'
+      }
+    });
+
+    res.status(200).json({
+      count: requests.length,
+      claims: requests
+    });
+  } catch (error) {
+    console.error('Get my claims error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'An error occurred while fetching your claims'
     });
   }
 };
