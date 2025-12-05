@@ -493,3 +493,112 @@ export const getMyClaims = async (req, res) => {
     });
   }
 };
+
+// GET /api/foods/:id/share-link - Genereaza link de partajare pentru un aliment
+export const getShareLink = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const userId = req.session.userId;
+
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        category: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'Food item not found'
+      });
+    }
+
+    if (product.ownerId !== userId) {
+      return res.status(403).json({
+        error: 'Forbidden',
+        message: 'You can only generate share links for your own food items'
+      });
+    }
+
+    const baseUrl = process.env.BASE_URL || 'http://localhost:3000';
+    const shareUrl = `${baseUrl}/share/food/${id}`;
+    const text = `Check out this food: ${product.name}${product.category ? ' (' + product.category.name + ')' : ''}!`;
+
+    res.status(200).json({
+      shareUrl,
+      text
+    });
+  } catch (error) {
+    console.error('Get share link error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'An error occurred while generating share link'
+    });
+  }
+};
+
+// GET /share/food/:id - Endpoint public pentru vizualizarea alimentului partajat
+export const getSharedFood = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const product = await prisma.product.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        category: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        }
+      }
+    });
+
+    if (!product) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'Food item not found'
+      });
+    }
+
+    if (!product.isAvailable) {
+      return res.status(200).json({
+        message: 'This food item is no longer available',
+        product: {
+          id: product.id,
+          name: product.name,
+          category: product.category,
+          isAvailable: false
+        }
+      });
+    }
+
+    res.status(200).json({
+      product: {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        expiresOn: product.expiresOn,
+        notes: product.notes,
+        isAvailable: product.isAvailable,
+        owner: product.owner
+      }
+    });
+  } catch (error) {
+    console.error('Get shared food error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'An error occurred while fetching shared food item'
+    });
+  }
+};
