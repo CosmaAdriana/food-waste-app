@@ -7,7 +7,8 @@ import {
   markAvailable,
   getExpiringFoods,
   claimFood,
-  getMyClaims
+  getMyClaims,
+  getShareLink
 } from '../controllers/foodController.js';
 import { getFoodRequests } from '../controllers/requestController.js';
 import { requireAuth } from '../middleware/requireAuth.js';
@@ -23,9 +24,10 @@ router.get('/my-claims', getMyClaims);
 router.post('/', createFood);
 router.get('/', getFoods);
 router.get('/:id/requests', getFoodRequests);
+router.get('/:id/share-link', getShareLink);
 router.put('/:id', updateFood);
 router.delete('/:id', deleteFood);
 router.patch('/:id/mark-available', markAvailable);
-router.post('/:id/claim', claimFood); 
+router.post('/:id/claim', claimFood);
 
 export default router;

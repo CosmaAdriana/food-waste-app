@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import requestRoutes from './routes/requestRoutes.js';
+import { getSharedFood } from './controllers/foodController.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -44,6 +45,9 @@ app.use(
     }
   })
 );
+
+// Public routes (no authentication required)
+app.get('/share/food/:id', getSharedFood);
 
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
