@@ -1,29 +1,65 @@
 # Frontend – Food Waste App
 
-# Descriere generala
-Componenta de frontend reprezinta interfata vizibila a aplicatiei web Food Waste App.  
-Aceasta va fi dezvoltata sub forma unei Single Page Application (SPA) utilizand framework-ul React.  
-Scopul principal este de a permite utilizatorilor sa gestioneze alimentele din gospodarie, sa primeasca alerte de expirare si sa interactioneze cu alti utilizatori prin partajarea produselor disponibile.
+Aplicație web pentru prevenirea risipei alimentare
 
-# Obiective
-- Crearea unei interfete intuitive si usor de utilizat.  
-- Vizualizarea si administrarea alimentelor adaugate de utilizator.  
-- Afișarea produselor disponibile oferite de alti utilizatori.  
-- Gestionarea listei de prieteni si preferintelor alimentare.  
-- Revendicarea alimentelor disponibile.  
+## Obiectivul proiectului
+Scopul aplicației este de a încuraja utilizatorii să reducă risipa alimentară prin partajarea alimentelor care se apropie de termenul de expirare.
+Utilizatorii pot adăuga produsele din frigider, pot primi alerte când acestea expiră și le pot oferi altor persoane interesate.
 
-# Functionalitati planificate
-- Pagina principala: afisarea alimentelor pe categorii si evidentierea celor aproape de expirare. 
-- Autentificare si inregistrare utilizator. 
-- Formulare pentru adaugarea si editarea produselor.  
-- Sectiune dedicata produselor disponibile pentru alti utilizatori.  
-- Lista prieteni: adaugare, editare si stergere prieteni, vizualizarea preferintelor.  
-- Pagina revendicari: gestionarea produselor revendicate sau oferite.  
+## Echipa de proiect
+- Cosma Adriana – Frontend & Backend Developer
+- Pîrnuță Alexandra – Frontend & Backend Developer
 
-# Structura planificata a aplicatiei
-- */inventory* – lista completa a alimentelor din frigider.  
-- */available* – produse marcate ca disponibile pentru altii.  
-- */friends* – lista de prieteni si preferinte alimentare.  
-- */claims* – cereri de revendicare trimise si primite.  
-- */external* – cautare produse alimentare prin API extern.  
-- */login, */register** – pagini pentru autentificare.
+## Tehnologii utilizate
+- **Frontend**: React + Vite (SPA)
+- **Backend**: Node.js, Express
+- **ORM**: Prisma
+- **Baza de date**: PostgreSQL
+- **Mediu de dezvoltare**: Visual Studio Code, GitHub
+
+## Funcționalități planificate
+- Înregistrare utilizator nou și autentificare utilizator care are deja cont
+- Gestionare produse alimentare: adăugare, vizualizare, editare, ștergere, marcare ca disponibile
+- Alerte de expirare: identificare produse care expiră în curând
+- Creare grup de prieteni
+- Vizualizare alimente disponibile la prieteni
+- Revendicare produse oferite
+- CRUD complet
+- Validare date și gestionare erori
+
+---
+
+## Cum să rulezi aplicația
+
+### 1. Instalează dependențele
+```bash
+npm install
+```
+
+### 2. Pornește aplicația
+```bash
+npm run dev
+```
+
+Aplicația va rula pe **http://localhost:5173**
+
+
+## Structura proiectului
+
+```
+src/
+├── components/     # Componente reutilizabile
+├── pages/          # Pagini principale
+├── context/        # State management (AuthContext)
+├── services/       # API calls
+├── utils/          # Funcții helper
+├── App.jsx         # Routing principal
+└── main.jsx        # Entry point
+```
+
+
+## Link-uri utile
+
+- [React Documentation](https://react.dev/)
+- [Vite Documentation](https://vitejs.dev/)
+- [React Router](https://reactrouter.com/)
