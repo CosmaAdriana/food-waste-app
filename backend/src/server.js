@@ -9,6 +9,7 @@ import userRoutes from './routes/userRoutes.js';
 import foodRoutes from './routes/foodRoutes.js';
 import friendRoutes from './routes/friendRoutes.js';
 import requestRoutes from './routes/requestRoutes.js';
+import categoryRoutes from './routes/categoryRoutes.js';
 import { getSharedFood } from './controllers/foodController.js';
 
 const app = express();
@@ -54,6 +55,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/foods', foodRoutes);
 app.use('/api/friends', friendRoutes);
 app.use('/api/requests', requestRoutes);
+app.use('/api/categories', categoryRoutes);
 
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', message: 'Server is running' });
