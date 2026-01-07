@@ -6,6 +6,7 @@ import {
   deleteFood,
   markAvailable,
   getExpiringFoods,
+  getAvailableFoods,
   claimFood,
   getMyClaims,
   getShareLink
@@ -18,6 +19,7 @@ const router = express.Router();
 
 router.use(requireAuth);
 
+router.get('/available', getAvailableFoods);
 router.get('/expiring', getExpiringFoods);
 router.get('/my-claims', getMyClaims);
 

@@ -324,6 +324,79 @@ export const getExpiringFoods = async (req, res) => {
   }
 };
 
+// GET /api/foods/available - Produse disponibile de la prieteni
+export const getAvailableFoods = async (req, res) => {
+  try {
+    const userId = req.session.userId;
+
+    // Gaseste toate prieteniile ACCEPTED
+    const friendships = await prisma.friendship.findMany({
+      where: {
+        OR: [
+          { userId: userId, status: 'ACCEPTED' },
+          { friendId: userId, status: 'ACCEPTED' }
+        ]
+      }
+    });
+
+    // Extrage ID-urile prietenilor
+    const friendIds = friendships.map(friendship => {
+      return friendship.userId === userId ? friendship.friendId : friendship.userId;
+    });
+
+    if (friendIds.length === 0) {
+      return res.status(200).json({
+        count: 0,
+        products: []
+      });
+    }
+
+    // Gaseste DOAR produsele disponibile de la prieteni
+    const products = await prisma.product.findMany({
+      where: {
+        ownerId: {
+          in: friendIds
+        },
+        isAvailable: true
+      },
+      include: {
+        category: true,
+        owner: {
+          select: {
+            id: true,
+            name: true,
+            email: true
+          }
+        },
+        requests: {
+          where: {
+            claimerId: userId
+          },
+          select: {
+            id: true,
+            status: true,
+            createdAt: true
+          }
+        }
+      },
+      orderBy: {
+        expiresOn: 'asc'
+      }
+    });
+
+    res.status(200).json({
+      count: products.length,
+      products
+    });
+  } catch (error) {
+    console.error('Get available foods error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      message: 'An error occurred while fetching available food items'
+    });
+  }
+};
+
 // POST /api/foods/:id/claim - Claim un produs disponibil
 export const claimFood = async (req, res) => {
   try {

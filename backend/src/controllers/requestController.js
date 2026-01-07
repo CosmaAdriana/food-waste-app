@@ -140,6 +140,12 @@ export const approveRequest = async (req, res) => {
       }
     });
 
+    // Marchează automat produsul ca indisponibil după aprobare
+    await prisma.product.update({
+      where: { id: request.productId },
+      data: { isAvailable: false }
+    });
+
     res.status(200).json({
       message: 'Request approved successfully',
       request: updatedRequest

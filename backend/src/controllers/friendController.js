@@ -3,48 +3,55 @@ import prisma from '../config/prisma.js';
 // POST /api/friends - Trimite cerere de prietenie
 export const addFriend = async (req, res) => {
   try {
-    const { friendId, preference } = req.body;
+    const { friendEmail, preference } = req.body;
     const userId = req.session.userId;
 
-    if (!friendId) {
+    if (!friendEmail) {
       return res.status(400).json({
         error: 'Validation error',
-        message: 'Friend ID is required'
+        message: 'Friend email is required'
       });
     }
 
-    if (parseInt(friendId) === userId) {
+    const friendUser = await prisma.user.findUnique({
+      where: { email: friendEmail }
+    });
+
+    if (!friendUser) {
+      return res.status(404).json({
+        error: 'Not found',
+        message: 'User not found with this email'
+      });
+    }
+
+    if (friendUser.id === userId) {
       return res.status(400).json({
         error: 'Validation error',
         message: 'You cannot add yourself as a friend'
       });
     }
 
-    const friendUser = await prisma.user.findUnique({
-      where: { id: parseInt(friendId) }
-    });
-
-    if (!friendUser) {
-      return res.status(404).json({
-        error: 'Not found',
-        message: 'User not found'
-      });
-    }
-
     const existingFriendship = await prisma.friendship.findFirst({
       where: {
         OR: [
-          { userId: userId, friendId: parseInt(friendId) },
-          { userId: parseInt(friendId), friendId: userId }
+          { userId: userId, friendId: friendUser.id },
+          { userId: friendUser.id, friendId: userId }
         ]
       }
     });
 
     if (existingFriendship) {
-      return res.status(400).json({
-        error: 'Validation error',
-        message: 'Friendship already exists or pending'
-      });
+      // Daca prietenia a fost refuzata, o stergem si permitem o noua cerere
+      if (existingFriendship.status === 'REJECTED') {
+        await prisma.friendship.delete({
+          where: { id: existingFriendship.id }
+        });
+      } else {
+        return res.status(400).json({
+          error: 'Validation error',
+          message: 'Friendship already exists or pending'
+        });
+      }
     }
 
     if (preference) {
@@ -61,7 +68,7 @@ export const addFriend = async (req, res) => {
     const friendship = await prisma.friendship.create({
       data: {
         userId: userId,
-        friendId: parseInt(friendId),
+        friendId: friendUser.id,
         preference: preference || null,
         status: 'PENDING'
       },
@@ -145,7 +152,8 @@ export const getFriends = async (req, res) => {
         preference: friendship.preference,
         createdAt: friendship.createdAt,
         friend: isSender ? friendship.friend : friendship.user,
-        isSender: isSender 
+        isSender: isSender,
+        type: isSender ? 'sent' : 'received'
       };
     });
 
