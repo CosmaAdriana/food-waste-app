@@ -80,18 +80,18 @@ function Available() {
   });
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Se incarca...</div>;
+    return <div>Se incarca...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <h1>Produse Disponibile</h1>
       <p>Produse marcate ca disponibile de catre prietenii tai</p>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="text-danger">{error}</p>}
 
       {products.length > 0 && (
-        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <div className="card mb-lg" style={{ backgroundColor: '#f8f9fa' }}>
           <h3>Filtrare</h3>
           <div>
             <label htmlFor="filterCategory" style={{ marginRight: '10px' }}>Categorie:</label>
@@ -99,7 +99,6 @@ function Available() {
               id="filterCategory"
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              style={{ padding: '8px', borderRadius: '5px' }}
             >
               <option value="">Toate categoriile</option>
               {categories.map((category) => (
@@ -120,16 +119,11 @@ function Available() {
         <div>
           <p>Afisez {filteredProducts.length} din {products.length} produse</p>
 
-          <div style={{ display: 'grid', gap: '15px', marginTop: '20px' }}>
+          <div className="grid mt-lg">
             {filteredProducts.map((product) => (
               <div
                 key={product.id}
-                style={{
-                  padding: '15px',
-                  backgroundColor: 'var(--card-bg)',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
+                className="card"
               >
                 <h3>{product.name}</h3>
 
@@ -150,29 +144,19 @@ function Available() {
                   <p><strong>Note:</strong> {product.notes}</p>
                 )}
 
-                <div style={{ marginTop: '15px' }}>
+                <div className="mt-md">
                   {product.requests && product.requests.length > 0 && product.requests[0].status === 'PENDING' ? (
-                    // User-ul a revendicat deja - cerere în așteptare
-                    <p style={{
-                      padding: '10px',
-                      backgroundColor: '#fff3cd',
-                      color: '#856404',
-                      borderRadius: '5px',
-                      border: '1px solid #ffc107'
-                    }}>
-                      ⏳ Cerere trimisă - în așteptarea aprobării
+                    // User-ul a revendicat deja - cerere în asteptare
+                    <p className="alert alert-warning" style={{ margin: 0 }}>
+                       Cerere trimisă - în așteptarea aprobării
                     </p>
                   ) : (
-                    // User-ul nu a revendicat încă - arată butonul
+                    // User-ul nu a revendicat inca - arata butonul
                     <button
                       onClick={() => handleClaimProduct(product.id, product.name, product.owner.name)}
                       style={{
-                        padding: '10px 20px',
                         backgroundColor: 'var(--primary-color)',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer'
+                        color: 'white'
                       }}
                     >
                       Revendica Produs

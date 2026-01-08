@@ -163,34 +163,27 @@ function Inventory() {
   });
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Se încarcă...</div>;
+    return <div>Se încarcă...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <h1>Inventarul Meu</h1>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="text-danger">{error}</p>}
 
       {/* Buton Add Product */}
       <button
         onClick={() => setShowForm(!showForm)}
-        style={{
-          padding: '10px 20px',
-          backgroundColor: 'var(--primary-color)',
-          color: 'white',
-          border: 'none',
-          borderRadius: '5px',
-          cursor: 'pointer',
-          marginBottom: '20px'
-        }}
+        className="mb-lg"
+        style={{ backgroundColor: 'var(--primary-color)', color: 'white' }}
       >
         {showForm ? 'Anulează' : 'Adaugă Produs'}
       </button>
 
       {/* Filtre */}
       {products.length > 0 && (
-        <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '8px' }}>
+        <div className="card mb-lg" style={{ backgroundColor: '#f8f9fa' }}>
           <h3>Filtrare</h3>
           <div style={{ display: 'flex', gap: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
             <div>
@@ -199,7 +192,6 @@ function Inventory() {
                 id="filterCategory"
                 value={filterCategory}
                 onChange={(e) => setFilterCategory(e.target.value)}
-                style={{ padding: '8px', borderRadius: '5px' }}
               >
                 <option value="">Toate categoriile</option>
                 {categories.map((category) => (
@@ -226,18 +218,10 @@ function Inventory() {
 
       {/* Formular Add Product */}
       {showForm && (
-        <div
-          style={{
-            padding: '20px',
-            backgroundColor: 'var(--card-bg)',
-            borderRadius: '8px',
-            border: '1px solid #ddd',
-            marginBottom: '20px'
-          }}
-        >
+        <div className="card mb-lg">
           <h3>Adaugă Produs Nou</h3>
           <form onSubmit={handleSubmit}>
-            <div style={{ marginBottom: '15px' }}>
+            <div className="mb-md">
               <label htmlFor="name">Nume produs *</label>
               <input
                 type="text"
@@ -246,18 +230,16 @@ function Inventory() {
                 value={formData.name}
                 onChange={handleInputChange}
                 placeholder="Ex: Lapte"
-                style={{ width: '100%' }}
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
+            <div className="mb-md">
               <label htmlFor="categoryId">Categorie</label>
               <select
                 id="categoryId"
                 name="categoryId"
                 value={formData.categoryId}
                 onChange={handleInputChange}
-                style={{ width: '100%', padding: '8px' }}
               >
                 <option value="">Selectează categoria (opțional)</option>
                 {categories.map((category) => (
@@ -268,7 +250,7 @@ function Inventory() {
               </select>
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
+            <div className="mb-md">
               <label htmlFor="expiresOn">Data expirării *</label>
               <input
                 type="date"
@@ -276,11 +258,10 @@ function Inventory() {
                 name="expiresOn"
                 value={formData.expiresOn}
                 onChange={handleInputChange}
-                style={{ width: '100%' }}
               />
             </div>
 
-            <div style={{ marginBottom: '15px' }}>
+            <div className="mb-md">
               <label htmlFor="notes">Note (opțional)</label>
               <textarea
                 id="notes"
@@ -289,37 +270,22 @@ function Inventory() {
                 onChange={handleInputChange}
                 placeholder="Ex: Jumătate din cutie"
                 rows="3"
-                style={{ width: '100%' }}
               />
             </div>
 
-            {formError && <p style={{ color: 'red' }}>{formError}</p>}
+            {formError && <p className="text-danger mb-md">{formError}</p>}
 
             <div style={{ display: 'flex', gap: '10px' }}>
               <button
                 type="submit"
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: 'var(--primary-color)',
-                  color: 'white',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer'
-                }}
+                style={{ backgroundColor: 'var(--primary-color)', color: 'white' }}
               >
                 Salvează
               </button>
               <button
                 type="button"
                 onClick={handleCancel}
-                style={{
-                  padding: '10px 20px',
-                  backgroundColor: '#ccc',
-                  color: '#333',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer'
-                }}
+                style={{ backgroundColor: '#ccc', color: '#333' }}
               >
                 Anulează
               </button>
@@ -337,17 +303,16 @@ function Inventory() {
         <div>
           <p>Afișez {filteredProducts.length} din {products.length} produse</p>
 
-          <div style={{ display: 'grid', gap: '15px', marginTop: '20px' }}>
+          <div className="grid mt-lg">
             {filteredProducts.map((product) => {
               const expiringSoon = isExpiringSoon(product.expiresOn);
               return (
                 <div
                   key={product.id}
+                  className="card"
                   style={{
-                    padding: '15px',
-                    backgroundColor: expiringSoon ? '#fff3cd' : 'var(--card-bg)',
-                    borderRadius: '8px',
-                    border: expiringSoon ? '2px solid #ff9800' : '1px solid #ddd'
+                    backgroundColor: expiringSoon ? '#fff3cd' : undefined,
+                    border: expiringSoon ? '2px solid #ff9800' : undefined
                   }}
                 >
                 <h3>
@@ -378,16 +343,12 @@ function Inventory() {
                 </p>
 
                 {/* Butoane de acțiuni */}
-                <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+                <div className="mt-md" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => handleToggleAvailability(product.id, product.name, product.isAvailable)}
                     style={{
-                      padding: '8px 15px',
                       backgroundColor: product.isAvailable ? '#ffc107' : '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer'
+                      color: 'white'
                     }}
                   >
                     {product.isAvailable ? 'Marchează ca Indisponibil' : 'Marchează ca Disponibil'}
@@ -395,12 +356,8 @@ function Inventory() {
                   <button
                     onClick={() => handleDelete(product.id, product.name)}
                     style={{
-                      padding: '8px 15px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer'
+                      backgroundColor: 'var(--danger-color)',
+                      color: 'white'
                     }}
                   >
                     Șterge

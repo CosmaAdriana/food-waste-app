@@ -108,39 +108,32 @@ function Friends() {
   const pendingSent = friendships.filter(f => f.status === 'PENDING' && f.type === 'sent');
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Se incarca...</div>;
+    return <div>Se incarca...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <h1>Prieteni</h1>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="text-danger">{error}</p>}
 
       {/* Formular adaugare prieten */}
-      <div style={{
-        padding: '20px',
-        backgroundColor: '#f8f9fa',
-        borderRadius: '8px',
-        marginBottom: '30px'
-      }}>
+      <div className="card mb-xl" style={{ backgroundColor: '#f8f9fa' }}>
         <h2>Adauga Prieten</h2>
         <form onSubmit={handleAddFriend}>
-          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px' }}>
-            <div style={{ flex: 1 }}>
+          <div style={{ display: 'flex', gap: '10px', marginBottom: '10px', flexWrap: 'wrap' }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
               <input
                 type="email"
                 placeholder="Email-ul prietenului"
                 value={friendEmail}
                 onChange={(e) => setFriendEmail(e.target.value)}
-                style={{ width: '100%', padding: '10px' }}
               />
             </div>
-            <div style={{ flex: 1 }}>
+            <div style={{ flex: 1, minWidth: '200px' }}>
               <select
                 value={preference}
                 onChange={(e) => setPreference(e.target.value)}
-                style={{ width: '100%', padding: '10px' }}
               >
                 <option value="">Fara preferinta (optional)</option>
                 <option value="OMNIVOR">Omnivor</option>
@@ -154,34 +147,29 @@ function Friends() {
             <button
               type="submit"
               style={{
-                padding: '10px 20px',
                 backgroundColor: 'var(--primary-color)',
                 color: 'white',
-                border: 'none',
-                borderRadius: '5px',
-                cursor: 'pointer',
                 whiteSpace: 'nowrap'
               }}
             >
               Trimite Cerere
             </button>
           </div>
-          {addError && <p style={{ color: 'red', margin: '0' }}>{addError}</p>}
+          {addError && <p className="text-danger" style={{ margin: '0' }}>{addError}</p>}
         </form>
       </div>
 
       {/* Cereri primite */}
       {pendingReceived.length > 0 && (
-        <div style={{ marginBottom: '30px' }}>
+        <div className="mb-xl">
           <h2>Cereri Primite ({pendingReceived.length})</h2>
-          <div style={{ display: 'grid', gap: '15px' }}>
+          <div className="grid">
             {pendingReceived.map((friendship) => (
               <div
                 key={friendship.id}
+                className="card"
                 style={{
-                  padding: '15px',
                   backgroundColor: '#fff3cd',
-                  borderRadius: '8px',
                   border: '1px solid #ffc107'
                 }}
               >
@@ -190,16 +178,12 @@ function Friends() {
                 {friendship.preference && (
                   <p><strong>Preferinta:</strong> {friendship.preference}</p>
                 )}
-                <div style={{ marginTop: '10px', display: 'flex', gap: '10px' }}>
+                <div className="mt-sm" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
                     onClick={() => handleAccept(friendship.id, friendship.friend.name)}
                     style={{
-                      padding: '8px 15px',
-                      backgroundColor: '#28a745',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer'
+                      backgroundColor: 'var(--success-color)',
+                      color: 'white'
                     }}
                   >
                     Accepta
@@ -207,12 +191,8 @@ function Friends() {
                   <button
                     onClick={() => handleReject(friendship.id, friendship.friend.name)}
                     style={{
-                      padding: '8px 15px',
-                      backgroundColor: '#dc3545',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '5px',
-                      cursor: 'pointer'
+                      backgroundColor: 'var(--danger-color)',
+                      color: 'white'
                     }}
                   >
                     Refuza
@@ -226,18 +206,13 @@ function Friends() {
 
       {/* Cereri trimise */}
       {pendingSent.length > 0 && (
-        <div style={{ marginBottom: '30px' }}>
+        <div className="mb-xl">
           <h2>Cereri Trimise ({pendingSent.length})</h2>
-          <div style={{ display: 'grid', gap: '15px' }}>
+          <div className="grid">
             {pendingSent.map((friendship) => (
               <div
                 key={friendship.id}
-                style={{
-                  padding: '15px',
-                  backgroundColor: 'var(--card-bg)',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
+                className="card"
               >
                 <h3>{friendship.friend.name}</h3>
                 <p><strong>Email:</strong> {friendship.friend.email}</p>
@@ -254,16 +229,11 @@ function Friends() {
         {acceptedFriends.length === 0 ? (
           <p>Nu ai prieteni inca. Adauga primul prieten!</p>
         ) : (
-          <div style={{ display: 'grid', gap: '15px' }}>
+          <div className="grid">
             {acceptedFriends.map((friendship) => (
               <div
                 key={friendship.id}
-                style={{
-                  padding: '15px',
-                  backgroundColor: 'var(--card-bg)',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
+                className="card"
               >
                 <h3>{friendship.friend.name}</h3>
                 <p><strong>Email:</strong> {friendship.friend.email}</p>

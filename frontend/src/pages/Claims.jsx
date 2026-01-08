@@ -119,47 +119,35 @@ function Claims() {
   };
 
   if (loading) {
-    return <div style={{ padding: '20px' }}>Se încarcă...</div>;
+    return <div>Se încarcă...</div>;
   }
 
   return (
-    <div style={{ padding: '20px' }}>
+    <div>
       <h1>Cereri de Produse</h1>
 
-      {error && <p style={{ color: 'red' }}>{error}</p>}
+      {error && <p className="text-danger">{error}</p>}
       {successMessage && (
-        <div style={{
-          padding: '15px',
-          backgroundColor: '#d4edda',
-          color: '#155724',
-          borderRadius: '5px',
-          marginBottom: '20px',
-          border: '1px solid #c3e6cb'
-        }}>
+        <div className="alert alert-success">
           {successMessage}
         </div>
       )}
 
       {/* Sectiunea "My Claims" - Cererile pe care le-am trimis */}
-      <div style={{ marginBottom: '40px' }}>
+      <div className="mb-xl">
         <h2>Cererile Mele</h2>
-        <p style={{ color: '#666', marginBottom: '15px' }}>
+        <p style={{ color: 'var(--text-light)' }} className="mb-md">
           Produse pe care le-ai solicitat de la prieteni
         </p>
 
         {myClaims.length === 0 ? (
           <p>Nu ai trimis nicio cerere încă.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '15px' }}>
+          <div className="grid">
             {myClaims.map((claim) => (
               <div
                 key={claim.id}
-                style={{
-                  padding: '15px',
-                  backgroundColor: 'var(--card-bg)',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
+                className="card"
               >
                 <h3>{claim.product.name}</h3>
 
@@ -198,23 +186,18 @@ function Claims() {
       {/* Sectiunea "Received Requests" - Cererile primite pentru produsele mele */}
       <div>
         <h2>Cereri Primite</h2>
-        <p style={{ color: '#666', marginBottom: '15px' }}>
+        <p style={{ color: 'var(--text-light)' }} className="mb-md">
           Cereri de la prieteni pentru produsele tale
         </p>
 
         {receivedRequests.length === 0 ? (
           <p>Nu ai cereri primite încă.</p>
         ) : (
-          <div style={{ display: 'grid', gap: '15px' }}>
+          <div className="grid">
             {receivedRequests.map((request) => (
               <div
                 key={request.id}
-                style={{
-                  padding: '15px',
-                  backgroundColor: 'var(--card-bg)',
-                  borderRadius: '8px',
-                  border: '1px solid #ddd'
-                }}
+                className="card"
               >
                 <h3>{request.product.name}</h3>
 
@@ -247,16 +230,12 @@ function Claims() {
 
                 {/* Butoane de actiuni doar dacă statusul e PENDING */}
                 {request.status === 'PENDING' && (
-                  <div style={{ marginTop: '15px', display: 'flex', gap: '10px' }}>
+                  <div className="mt-md" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                     <button
                       onClick={() => handleApprove(request.id, request.product.name, request.claimer.name)}
                       style={{
-                        padding: '8px 15px',
-                        backgroundColor: '#28a745',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer'
+                        backgroundColor: 'var(--success-color)',
+                        color: 'white'
                       }}
                     >
                       Aprobă
@@ -264,12 +243,8 @@ function Claims() {
                     <button
                       onClick={() => handleReject(request.id, request.product.name, request.claimer.name)}
                       style={{
-                        padding: '8px 15px',
-                        backgroundColor: '#dc3545',
-                        color: 'white',
-                        border: 'none',
-                        borderRadius: '5px',
-                        cursor: 'pointer'
+                        backgroundColor: 'var(--danger-color)',
+                        color: 'white'
                       }}
                     >
                       Respinge

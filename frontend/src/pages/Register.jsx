@@ -58,69 +58,71 @@ function Register() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', backgroundColor: 'var(--card-bg)', borderRadius: '8px' }}>
-      <h1>Food Waste App</h1>
-      <h2>Register</h2>
+    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
+      <div className="card">
+        <h1 className="text-center">Food Waste App</h1>
+        <h2 className="text-center mb-lg">Register</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="name">Nume</label>
-          <input
-            type="text"
-            id="name"
-            name="name"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Numele tău"
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-md">
+            <label htmlFor="name">Nume</label>
+            <input
+              type="text"
+              id="name"
+              name="name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Numele tău"
+            />
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            placeholder="exemplu@email.com"
-          />
-        </div>
+          <div className="mb-md">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="exemplu@email.com"
+            />
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Minim 6 caractere"
-          />
-        </div>
+          <div className="mb-md">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Minim 6 caractere"
+            />
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="confirmPassword">Confirmă Password</label>
-          <input
-            type="password"
-            id="confirmPassword"
-            name="confirmPassword"
-            value={confirmPassword}
-            onChange={(e) => setConfirmPassword(e.target.value)}
-            placeholder="Confirmă parola"
-          />
-        </div>
+          <div className="mb-md">
+            <label htmlFor="confirmPassword">Confirmă Password</label>
+            <input
+              type="password"
+              id="confirmPassword"
+              name="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirmă parola"
+            />
+          </div>
 
-        {errorMessage && <p style={{ color: 'var(--danger-color)', marginBottom: '15px' }}>{errorMessage}</p>}
+          {errorMessage && <p className="text-danger mb-md">{errorMessage}</p>}
 
-        <button type="submit" style={{ width: '100%', backgroundColor: 'var(--primary-color)', color: 'white' }}>
-          Register
-        </button>
-      </form>
+          <button type="submit" style={{ width: '100%' }}>
+            Register
+          </button>
+        </form>
 
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Ai deja cont? <a href="/login">Login</a>
-      </p>
+        <p className="mt-lg text-center">
+          Ai deja cont? <a href="/login">Login</a>
+        </p>
+      </div>
     </div>
   );
 }

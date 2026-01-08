@@ -48,43 +48,45 @@ function Login() {
   };
 
   return (
-    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px', backgroundColor: 'var(--card-bg)', borderRadius: '8px' }}>
-      <h1>Food Waste App</h1>
-      <h2>Login</h2>
+    <div style={{ maxWidth: '400px', margin: '50px auto', padding: '20px' }}>
+      <div className="card">
+        <h1 className="text-center">Food Waste App</h1>
+        <h2 className="text-center mb-lg">Login</h2>
 
-      <form onSubmit={handleSubmit}>
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="email">Email</label>
-          <input
-            type="email"
-            id="email"
-            name="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-          />
-        </div>
+        <form onSubmit={handleSubmit}>
+          <div className="mb-md">
+            <label htmlFor="email">Email</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
 
-        <div style={{ marginBottom: '15px' }}>
-          <label htmlFor="password">Password</label>
-          <input
-            type="password"
-            id="password"
-            name="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-        </div>
+          <div className="mb-md">
+            <label htmlFor="password">Password</label>
+            <input
+              type="password"
+              id="password"
+              name="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
 
-        {errorMessage && <p style={{ color: 'var(--danger-color)', marginBottom: '15px' }}>{errorMessage}</p>}
+          {errorMessage && <p className="text-danger mb-md">{errorMessage}</p>}
 
-        <button type="submit" style={{ width: '100%', backgroundColor: 'var(--primary-color)', color: 'white' }}>
-          Login
-        </button>
-      </form>
+          <button type="submit" style={{ width: '100%' }}>
+            Login
+          </button>
+        </form>
 
-      <p style={{ marginTop: '20px', textAlign: 'center' }}>
-        Nu ai cont? <a href="/register">Înregistrează-te</a>
-      </p>
+        <p className="mt-lg text-center">
+          Nu ai cont? <a href="/register">Înregistrează-te</a>
+        </p>
+      </div>
     </div>
   );
 }
