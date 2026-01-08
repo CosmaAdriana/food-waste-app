@@ -2,6 +2,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config.js';
 
 function Header() {
   const { user, logout } = useAuth();
@@ -26,7 +27,7 @@ function Header() {
   const fetchNotificationCounts = async () => {
     try {
       // Cereri de prietenie primite
-      const friendsRes = await axios.get('http://localhost:3000/api/friends', {
+      const friendsRes = await axios.get(`${API_URL}/api/friends`, {
         withCredentials: true
       });
       const pendingReceived = friendsRes.data.friendships.filter(
@@ -35,7 +36,7 @@ function Header() {
       setFriendRequestsCount(pendingReceived.length);
 
       // Cereri de produse primite
-      const requestsRes = await axios.get('http://localhost:3000/api/requests/received', {
+      const requestsRes = await axios.get(`${API_URL}/api/requests/received`, {
         withCredentials: true
       });
       const pendingRequests = requestsRes.data.requests.filter(

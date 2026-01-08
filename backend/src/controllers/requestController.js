@@ -146,6 +146,16 @@ export const approveRequest = async (req, res) => {
       data: { isAvailable: false }
     });
 
+    // Respinge automat toate celelalte cereri PENDING pentru același produs
+    await prisma.request.updateMany({
+      where: {
+        productId: request.productId,
+        id: { not: parseInt(id) }, // Exclude cererea aprobată
+        status: 'PENDING'
+      },
+      data: { status: 'REJECTED' }
+    });
+
     res.status(200).json({
       message: 'Request approved successfully',
       request: updatedRequest

@@ -13,6 +13,18 @@ export const createFood = async (req, res) => {
       });
     }
 
+    // Validare: data de expirare nu poate fi in trecut
+    const expirationDate = new Date(expiresOn);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); 
+
+    if (expirationDate < today) {
+      return res.status(400).json({
+        error: 'Validation error',
+        message: 'Expiration date cannot be in the past'
+      });
+    }
+
     if (categoryId) {
       const category = await prisma.category.findUnique({
         where: { id: parseInt(categoryId) }
@@ -125,6 +137,20 @@ export const updateFood = async (req, res) => {
         error: 'Forbidden',
         message: 'You are not authorized to update this food item'
       });
+    }
+
+    // Validare: data de expirare nu poate fi in trecut
+    if (expiresOn !== undefined) {
+      const expirationDate = new Date(expiresOn);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      if (expirationDate < today) {
+        return res.status(400).json({
+          error: 'Validation error',
+          message: 'Expiration date cannot be in the past'
+        });
+      }
     }
 
     if (categoryId !== undefined && categoryId !== null) {

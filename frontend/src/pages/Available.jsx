@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config.js';
 
 function Available() {
   const [products, setProducts] = useState([]);
@@ -23,7 +24,7 @@ function Available() {
   // Functie care ia produsele disponibile de la prieteni din API
   const fetchAvailableProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/foods/available', {
+      const res = await axios.get(`${API_URL}/api/foods/available`, {
         withCredentials: true
       });
       setProducts(res.data.products);
@@ -37,7 +38,7 @@ function Available() {
   // Functie care ia categoriile din API
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/categories');
+      const res = await axios.get(`${API_URL}/api/categories`);
       setCategories(res.data.categories);
     } catch (err) {
       console.error('Nu s-au putut incarca categoriile', err);
@@ -55,7 +56,7 @@ function Available() {
     if (!confirmClaim) return;
 
     try {
-      await axios.post(`http://localhost:3000/api/foods/${productId}/claim`, {}, {
+      await axios.post(`${API_URL}/api/foods/${productId}/claim`, {}, {
         withCredentials: true
       });
 

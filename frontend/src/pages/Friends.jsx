@@ -3,6 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config.js';
 
 function Friends() {
   const [friendships, setFriendships] = useState([]);
@@ -20,7 +21,7 @@ function Friends() {
   // Ia toate prieteniile (acceptate, pending trimise, pending primite)
   const fetchFriendships = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/friends', {
+      const res = await axios.get(`${API_URL}/api/friends`, {
         withCredentials: true
       });
       setFriendships(res.data.friendships);
@@ -50,9 +51,7 @@ function Friends() {
         requestData.preference = preference;
       }
 
-      console.log('Sending request:', requestData);
-
-      await axios.post('http://localhost:3000/api/friends', requestData, {
+      await axios.post(`${API_URL}/api/friends`, requestData, {
         withCredentials: true
       });
 
@@ -61,8 +60,6 @@ function Friends() {
       setPreference('');
       fetchFriendships();
     } catch (err) {
-      console.error('Error response:', err.response?.data);
-      console.error('Full error:', err);
       if (err.response && err.response.data) {
         setAddError(err.response.data.message || err.response.data.error || 'Eroare la trimiterea cererii');
       } else {
@@ -77,7 +74,7 @@ function Friends() {
     if (!confirm) return;
 
     try {
-      await axios.patch(`http://localhost:3000/api/friends/${friendshipId}/accept`, {}, {
+      await axios.patch(`${API_URL}/api/friends/${friendshipId}/accept`, {}, {
         withCredentials: true
       });
       alert('Cerere acceptata!');
@@ -93,7 +90,7 @@ function Friends() {
     if (!confirm) return;
 
     try {
-      await axios.patch(`http://localhost:3000/api/friends/${friendshipId}/reject`, {}, {
+      await axios.patch(`${API_URL}/api/friends/${friendshipId}/reject`, {}, {
         withCredentials: true
       });
       alert('Cerere refuzata!');

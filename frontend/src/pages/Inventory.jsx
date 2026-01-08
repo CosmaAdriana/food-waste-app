@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
+import API_URL from '../config.js';
 
 function Inventory() {
   const [products, setProducts] = useState([]);
@@ -11,6 +12,9 @@ function Inventory() {
   const [showExpiringSoon, setShowExpiringSoon] = useState(false);
 
   const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState(null);
+
+  const formRef = useRef(null); 
   const [formData, setFormData] = useState({
     name: '',
     categoryId: '',
@@ -26,7 +30,7 @@ function Inventory() {
 
   const fetchProducts = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/foods', {
+      const res = await axios.get(`${API_URL}/api/foods`, {
         withCredentials: true
       });
       setProducts(res.data.products);
@@ -39,7 +43,7 @@ function Inventory() {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/categories');
+      const res = await axios.get(`${API_URL}/api/categories`);
       setCategories(res.data.categories);
     } catch (err) {
       console.error('Nu s-au putut încărca categoriile', err);
@@ -73,31 +77,73 @@ function Inventory() {
       return;
     }
 
+    // Validare: data nu poate fi in trecut
+    const selectedDate = new Date(formData.expiresOn);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      setFormError('Data de expirare nu poate fi în trecut');
+      return;
+    }
+
     try {
-      await axios.post('http://localhost:3000/api/foods', {
-        name: formData.name,
-        categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
-        expiresOn: formData.expiresOn,
-        notes: formData.notes || null
-      }, {
-        withCredentials: true
-      });
+      if (editingProduct) {
+        // Editare 
+        await axios.put(`${API_URL}/api/foods/${editingProduct.id}`, {
+          name: formData.name,
+          categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
+          expiresOn: formData.expiresOn,
+          notes: formData.notes || null
+        }, {
+          withCredentials: true
+        });
+      } else {
+        // Creare 
+        await axios.post(`${API_URL}/api/foods`, {
+          name: formData.name,
+          categoryId: formData.categoryId ? parseInt(formData.categoryId) : null,
+          expiresOn: formData.expiresOn,
+          notes: formData.notes || null
+        }, {
+          withCredentials: true
+        });
+      }
 
-      // Reset formular si inchide
       setFormData({ name: '', categoryId: '', expiresOn: '', notes: '' });
+      setEditingProduct(null);
       setShowForm(false);
-
-      // Reincarca produsele
       fetchProducts();
     } catch (err) {
-      setFormError('Eroare la adăugarea produsului');
+      setFormError(editingProduct ? 'Eroare la editarea produsului' : 'Eroare la adăugarea produsului');
     }
   };
 
   const handleCancel = () => {
     setFormData({ name: '', categoryId: '', expiresOn: '', notes: '' });
     setFormError('');
+    setEditingProduct(null);
     setShowForm(false);
+  };
+
+  const handleEdit = (product) => {
+    // Converteste data in format yyyy-MM-dd pentru input type="date"
+    const dateStr = product.expiresOn.split('T')[0];
+
+    setFormData({
+      name: product.name,
+      categoryId: product.categoryId || '',
+      expiresOn: dateStr,
+      notes: product.notes || ''
+    });
+    setEditingProduct(product);
+    setShowForm(true);
+    setFormError('');
+
+    // Scroll la formular dupa ce se deschide
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const handleDelete = async (productId, productName) => {
@@ -105,10 +151,9 @@ function Inventory() {
     if (!confirmDelete) return;
 
     try {
-      await axios.delete(`http://localhost:3000/api/foods/${productId}`, {
+      await axios.delete(`${API_URL}/api/foods/${productId}`, {
         withCredentials: true
       });
-      // Reincarca produsele
       fetchProducts();
     } catch (err) {
       alert('Eroare la ștergerea produsului');
@@ -125,7 +170,7 @@ function Inventory() {
     if (!confirmMark) return;
 
     try {
-      await axios.put(`http://localhost:3000/api/foods/${productId}`, {
+      await axios.put(`${API_URL}/api/foods/${productId}`, {
         isAvailable: newStatus
       }, {
         withCredentials: true
@@ -149,12 +194,9 @@ function Inventory() {
 
   // Filtreaza produsele
   const filteredProducts = products.filter(product => {
-    // Filtrare dupa categorie
     if (filterCategory && product.categoryId !== parseInt(filterCategory)) {
       return false;
     }
-
-    // Filtrare dupa expirare
     if (showExpiringSoon && !isExpiringSoon(product.expiresOn)) {
       return false;
     }
@@ -174,7 +216,15 @@ function Inventory() {
 
       {/* Buton Add Product */}
       <button
-        onClick={() => setShowForm(!showForm)}
+        onClick={() => {
+          if (showForm) {
+            handleCancel();
+          } else {
+            setEditingProduct(null);
+            setFormData({ name: '', categoryId: '', expiresOn: '', notes: '' });
+            setShowForm(true);
+          }
+        }}
         className="mb-lg"
         style={{ backgroundColor: 'var(--primary-color)', color: 'white' }}
       >
@@ -216,10 +266,10 @@ function Inventory() {
         </div>
       )}
 
-      {/* Formular Add Product */}
+      {/* Formular Add/Edit Product */}
       {showForm && (
-        <div className="card mb-lg">
-          <h3>Adaugă Produs Nou</h3>
+        <div ref={formRef} className="card mb-lg">
+          <h3>{editingProduct ? 'Editează Produs' : 'Adaugă Produs Nou'}</h3>
           <form onSubmit={handleSubmit}>
             <div className="mb-md">
               <label htmlFor="name">Nume produs *</label>
@@ -352,6 +402,15 @@ function Inventory() {
                     }}
                   >
                     {product.isAvailable ? 'Marchează ca Indisponibil' : 'Marchează ca Disponibil'}
+                  </button>
+                  <button
+                    onClick={() => handleEdit(product)}
+                    style={{
+                      backgroundColor: '#007bff',
+                      color: 'white'
+                    }}
+                  >
+                    Editează
                   </button>
                   <button
                     onClick={() => handleDelete(product.id, product.name)}

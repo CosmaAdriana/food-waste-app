@@ -3,6 +3,59 @@ import prisma from '../config/prisma.js';
 
 const SALT_ROUNDS = 10;
 
+
+const loginAttempts = {};
+const MAX_ATTEMPTS = 5;
+const LOCKOUT_TIME = 15 * 60 * 1000;
+
+
+const checkRateLimit = (email) => {
+  const now = Date.now();
+  const attempts = loginAttempts[email];
+
+  if (!attempts) {
+    return { allowed: true };
+  }
+
+  // Daca au trecut 15 minute de la ultima incercare esuata, resetam
+  if (now - attempts.lastAttemptTime > LOCKOUT_TIME) {
+    delete loginAttempts[email];
+    return { allowed: true };
+  }
+
+  // Daca utilizatorul a atins limita de incercari
+  if (attempts.count >= MAX_ATTEMPTS) {
+    const timeSinceLastAttempt = now - attempts.lastAttemptTime;
+    const remainingTime = Math.ceil((LOCKOUT_TIME - timeSinceLastAttempt) / 60000);
+    return {
+      allowed: false,
+      message: `Prea multe încercări eșuate. Încearcă din nou în ${remainingTime} minute.`
+    };
+  }
+
+  return { allowed: true };
+};
+
+// Functie pentru inregistrare incercare esuata
+const recordFailedAttempt = (email) => {
+  const now = Date.now();
+
+  if (!loginAttempts[email]) {
+    loginAttempts[email] = {
+      count: 1,
+      lastAttemptTime: now
+    };
+  } else {
+    loginAttempts[email].count += 1;
+    loginAttempts[email].lastAttemptTime = now;
+  }
+};
+
+// Functie pentru resetare incercari (la login reusit)
+const resetAttempts = (email) => {
+  delete loginAttempts[email];
+};
+
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
@@ -63,11 +116,21 @@ export const login = async (req, res) => {
       });
     }
 
+    // Verificare rate limit
+    const rateLimitCheck = checkRateLimit(email);
+    if (!rateLimitCheck.allowed) {
+      return res.status(429).json({
+        error: 'Too many attempts',
+        message: rateLimitCheck.message
+      });
+    }
+
     const user = await prisma.user.findUnique({
       where: { email }
     });
 
     if (!user) {
+      recordFailedAttempt(email);
       return res.status(401).json({
         error: 'Authentication failed',
         message: 'Invalid email or password'
@@ -77,11 +140,15 @@ export const login = async (req, res) => {
     const isPasswordValid = await bcrypt.compare(password, user.password);
 
     if (!isPasswordValid) {
+      recordFailedAttempt(email);
       return res.status(401).json({
         error: 'Authentication failed',
         message: 'Invalid email or password'
       });
     }
+
+    // Login reusit - resetam incercarile esuate
+    resetAttempts(email);
 
     req.session.userId = user.id;
 

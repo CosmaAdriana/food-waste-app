@@ -4,6 +4,7 @@
 
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import API_URL from '../config.js';
 
 function Claims() {
   const [myClaims, setMyClaims] = useState([]);
@@ -19,7 +20,7 @@ function Claims() {
 
   const fetchMyClaims = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/foods/my-claims', {
+      const res = await axios.get(`${API_URL}/api/foods/my-claims`, {
         withCredentials: true
       });
       setMyClaims(res.data.claims || []);
@@ -32,7 +33,7 @@ function Claims() {
 
   const fetchReceivedRequests = async () => {
     try {
-      const res = await axios.get('http://localhost:3000/api/requests/received', {
+      const res = await axios.get(`${API_URL}/api/requests/received`, {
         withCredentials: true
       });
       setReceivedRequests(res.data.requests || []);
@@ -80,7 +81,7 @@ function Claims() {
 
     try {
       await axios.patch(
-        `http://localhost:3000/api/requests/${requestId}/approve`,
+        `${API_URL}/api/requests/${requestId}/approve`,
         {},
         { withCredentials: true }
       );
@@ -103,7 +104,7 @@ function Claims() {
 
     try {
       await axios.patch(
-        `http://localhost:3000/api/requests/${requestId}/reject`,
+        `${API_URL}/api/requests/${requestId}/reject`,
         {},
         { withCredentials: true }
       );
