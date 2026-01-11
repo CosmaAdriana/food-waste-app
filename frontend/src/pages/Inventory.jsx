@@ -14,7 +14,7 @@ function Inventory() {
   const [showForm, setShowForm] = useState(false);
   const [editingProduct, setEditingProduct] = useState(null);
 
-  const formRef = useRef(null); 
+  const formRef = useRef(null);
   const [formData, setFormData] = useState({
     name: '',
     categoryId: '',
@@ -22,6 +22,10 @@ function Inventory() {
     notes: ''
   });
   const [formError, setFormError] = useState('');
+
+
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareData, setShareData] = useState({ url: '', text: '' });
 
   useEffect(() => {
     fetchProducts();
@@ -180,6 +184,51 @@ function Inventory() {
     } catch (err) {
       alert('Eroare la modificarea statusului produsului');
     }
+  };
+
+  const handleShare = async (productId, productName) => {
+    try {
+      // Apeleaza endpoint-ul pentru a obține link-ul de share
+      const res = await axios.get(`${API_URL}/api/foods/${productId}/share-link`, {
+        withCredentials: true
+      });
+
+      const { shareUrl, text } = res.data;
+
+
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: productName,
+            text: text,
+            url: shareUrl
+          });
+          return;
+        } catch (err) {
+          // Utilizatorul a anulat share-ul sau a apărut o eroare
+          if (err.name !== 'AbortError') {
+            console.error('Eroare la share:', err);
+          }
+        }
+      }
+
+      
+      setShareData({ url: shareUrl, text: text });
+      setShowShareModal(true);
+    } catch (err) {
+      alert('Eroare la generarea link-ului de partajare');
+    }
+  };
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(shareData.url)
+      .then(() => {
+        alert('Link copiat în clipboard!');
+        setShowShareModal(false);
+      })
+      .catch(() => {
+        alert('Eroare la copierea link-ului');
+      });
   };
 
   // Verifica daca produsul expira in 3 zile
@@ -403,6 +452,17 @@ function Inventory() {
                   >
                     {product.isAvailable ? 'Marchează ca Indisponibil' : 'Marchează ca Disponibil'}
                   </button>
+                  {product.isAvailable && (
+                    <button
+                      onClick={() => handleShare(product.id, product.name)}
+                      style={{
+                        backgroundColor: '#17a2b8',
+                        color: 'white'
+                      }}
+                    >
+                      Share
+                    </button>
+                  )}
                   <button
                     onClick={() => handleEdit(product)}
                     style={{
@@ -425,6 +485,106 @@ function Inventory() {
               </div>
               );
             })}
+          </div>
+        </div>
+      )}
+
+      {/* Modal Share */}
+      {showShareModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => setShowShareModal(false)}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '500px',
+              width: '90%',
+              padding: '30px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>Distribuie produsul</h3>
+            <p style={{ marginBottom: '20px', fontSize: '14px', color: '#666' }}>
+              {shareData.text}
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <a
+                href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareData.url)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  backgroundColor: '#1877f2',
+                  color: 'white',
+                  padding: '12px',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  borderRadius: '5px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Share pe Facebook
+              </a>
+
+              <a
+                href={`https://wa.me/?text=${encodeURIComponent(shareData.text + ' ' + shareData.url)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  backgroundColor: '#25d366',
+                  color: 'white',
+                  padding: '12px',
+                  textAlign: 'center',
+                  textDecoration: 'none',
+                  borderRadius: '5px',
+                  fontWeight: 'bold'
+                }}
+              >
+                Share pe WhatsApp
+              </a>
+
+              <button
+                onClick={copyToClipboard}
+                style={{
+                  backgroundColor: '#6c757d',
+                  color: 'white',
+                  padding: '12px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Copiază Link
+              </button>
+
+              <button
+                onClick={() => setShowShareModal(false)}
+                style={{
+                  backgroundColor: '#f8f9fa',
+                  color: '#333',
+                  padding: '12px',
+                  border: '1px solid #ddd',
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Închide
+              </button>
+            </div>
           </div>
         </div>
       )}
