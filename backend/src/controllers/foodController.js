@@ -93,6 +93,16 @@ export const getFoods = async (req, res) => {
               }
             }
           }
+        },
+        groups: {
+          include: {
+            group: {
+              select: {
+                id: true,
+                name: true
+              }
+            }
+          }
         }
       },
       orderBy: {
@@ -117,7 +127,7 @@ export const getFoods = async (req, res) => {
 export const updateFood = async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, categoryId, expiresOn, isAvailable, notes } = req.body;
+    const { name, categoryId, expiresOn, isAvailable, notes, groupIds } = req.body;
     const userId = req.session.userId;
 
 
@@ -170,8 +180,56 @@ export const updateFood = async (req, res) => {
     if (name !== undefined) updateData.name = name;
     if (categoryId !== undefined) updateData.categoryId = categoryId ? parseInt(categoryId) : null;
     if (expiresOn !== undefined) updateData.expiresOn = new Date(expiresOn);
-    if (isAvailable !== undefined) updateData.isAvailable = isAvailable;
     if (notes !== undefined) updateData.notes = notes;
+
+    // Gestionare isAvailable și grupuri
+    if (isAvailable !== undefined) {
+      updateData.isAvailable = isAvailable;
+
+      // Dacă se marchează ca indisponibil, șterge toate legăturile cu grupurile
+      if (!isAvailable) {
+        await prisma.productGroup.deleteMany({
+          where: { productId: parseInt(id) }
+        });
+      }
+    }
+
+    // Dacă se specifică groupIds (când se marchează disponibil cu grupuri)
+    if (groupIds !== undefined && Array.isArray(groupIds)) {
+      if (groupIds.length > 0) {
+        // Validează grupurile
+        const groups = await prisma.group.findMany({
+          where: {
+            id: { in: groupIds.map(id => parseInt(id)) },
+            userId: userId
+          }
+        });
+
+        if (groups.length !== groupIds.length) {
+          return res.status(400).json({
+            error: 'Validation error',
+            message: 'Some groups are invalid or do not belong to you'
+          });
+        }
+
+        // Actualizează legăturile cu grupurile
+        await prisma.productGroup.deleteMany({
+          where: { productId: parseInt(id) }
+        });
+
+        await prisma.productGroup.createMany({
+          data: groupIds.map(groupId => ({
+            productId: parseInt(id),
+            groupId: parseInt(groupId)
+          }))
+        });
+      } else {
+        // groupIds = [] înseamnă "toți prietenii"
+        await prisma.productGroup.deleteMany({
+          where: { productId: parseInt(id) }
+        });
+      }
+    }
 
     const product = await prisma.product.update({
       where: { id: parseInt(id) },
@@ -183,6 +241,11 @@ export const updateFood = async (req, res) => {
             id: true,
             name: true,
             email: true
+          }
+        },
+        groups: {
+          include: {
+            group: true
           }
         }
       }
@@ -350,12 +413,12 @@ export const getExpiringFoods = async (req, res) => {
   }
 };
 
-// GET /api/foods/available - Produse disponibile de la prieteni
+// GET /api/foods/available - Produse disponibile de la prieteni (cu verificare vizibilitate grupuri)
 export const getAvailableFoods = async (req, res) => {
   try {
     const userId = req.session.userId;
 
-    // Gaseste toate prieteniile ACCEPTED
+    // Găsește toate prieteniile ACCEPTED
     const friendships = await prisma.friendship.findMany({
       where: {
         OR: [
@@ -377,8 +440,8 @@ export const getAvailableFoods = async (req, res) => {
       });
     }
 
-    // Gaseste DOAR produsele disponibile de la prieteni
-    const products = await prisma.product.findMany({
+    // Găsește produsele disponibile de la prieteni cu informații despre grupuri
+    const allAvailableProducts = await prisma.product.findMany({
       where: {
         ownerId: {
           in: friendIds
@@ -392,6 +455,15 @@ export const getAvailableFoods = async (req, res) => {
             id: true,
             name: true,
             email: true
+          }
+        },
+        groups: {
+          include: {
+            group: {
+              include: {
+                members: true
+              }
+            }
           }
         },
         requests: {
@@ -410,9 +482,41 @@ export const getAvailableFoods = async (req, res) => {
       }
     });
 
+    // Filtrează produsele pe baza vizibilității grupurilor
+    const visibleProducts = allAvailableProducts.filter(product => {
+      // Dacă produsul nu are grupuri asociate = vizibil pentru TOȚI prietenii
+      if (product.groups.length === 0) {
+        return true;
+      }
+
+      // Verifică dacă user-ul face parte din vreunul dintre grupurile produsului
+      // Găsește friendship-ul dintre user și owner
+      const relevantFriendship = friendships.find(f =>
+        (f.userId === userId && f.friendId === product.ownerId) ||
+        (f.friendId === userId && f.userId === product.ownerId)
+      );
+
+      if (!relevantFriendship) {
+        return false;
+      }
+
+      // Verifică dacă acest friendship este membru în vreunul din grupurile produsului
+      const hasAccess = product.groups.some(pg =>
+        pg.group.members.some(m => m.friendshipId === relevantFriendship.id)
+      );
+
+      return hasAccess;
+    });
+
+    // Elimină câmpul groups din response pentru a nu expune detalii interne
+    const cleanProducts = visibleProducts.map(product => {
+      const { groups, ...productWithoutGroups } = product;
+      return productWithoutGroups;
+    });
+
     res.status(200).json({
-      count: products.length,
-      products
+      count: cleanProducts.length,
+      products: cleanProducts
     });
   } catch (error) {
     console.error('Get available foods error:', error);

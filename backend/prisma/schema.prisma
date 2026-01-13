@@ -17,17 +17,18 @@ model User {
   friendships Friendship[] @relation("UserFriendships")
   products    Product[]
   requests    Request[]    @relation("UserRequests")
+  groups      Group[]      @relation("UserGroups")
 }
 
 model Friendship {
-  id         Int              @id @default(autoincrement())
-  userId     Int
-  friendId   Int
-  preference Preference?
-  status     FriendshipStatus @default(PENDING)
-  createdAt  DateTime         @default(now())
-  friend     User             @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
-  user       User             @relation("UserFriendships", fields: [userId], references: [id], onDelete: Cascade)
+  id               Int              @id @default(autoincrement())
+  userId           Int
+  friendId         Int
+  status           FriendshipStatus @default(PENDING)
+  createdAt        DateTime         @default(now())
+  friend           User             @relation("FriendOf", fields: [friendId], references: [id], onDelete: Cascade)
+  user             User             @relation("UserFriendships", fields: [userId], references: [id], onDelete: Cascade)
+  groupMemberships GroupMembership[]
 
   @@unique([userId, friendId])
   @@index([userId])
@@ -42,18 +43,19 @@ model Category {
 }
 
 model Product {
-  id          Int       @id @default(autoincrement())
+  id          Int            @id @default(autoincrement())
   ownerId     Int
   name        String
   categoryId  Int?
   expiresOn   DateTime
-  isAvailable Boolean   @default(false)
+  isAvailable Boolean        @default(false)
   notes       String?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  category    Category? @relation(fields: [categoryId], references: [id])
-  owner       User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  createdAt   DateTime       @default(now())
+  updatedAt   DateTime       @updatedAt
+  category    Category?      @relation(fields: [categoryId], references: [id])
+  owner       User           @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   requests    Request[]
+  groups      ProductGroup[]
 
   @@index([ownerId])
   @@index([categoryId])
@@ -75,13 +77,52 @@ model Request {
   @@index([claimerId])
 }
 
-enum Preference {
-  OMNIVOR
-  VEGETARIAN
-  CARNIVOR
-  VEGAN
-  RAW_VEGAN
-  ALTCEVA
+model Group {
+  id        Int               @id @default(autoincrement())
+  name      String
+  userId    Int
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
+  user      User              @relation("UserGroups", fields: [userId], references: [id], onDelete: Cascade)
+  members   GroupMembership[]
+  products  ProductGroup[]
+
+  @@unique([userId, name])
+  @@index([userId])
+}
+
+model GroupMembership {
+  id           Int        @id @default(autoincrement())
+  groupId      Int
+  friendshipId Int
+  createdAt    DateTime   @default(now())
+  group        Group      @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  friendship   Friendship @relation(fields: [friendshipId], references: [id], onDelete: Cascade)
+
+  @@unique([groupId, friendshipId])
+  @@index([groupId])
+  @@index([friendshipId])
+}
+
+model ProductGroup {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  groupId   Int
+  createdAt DateTime @default(now())
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  group     Group    @relation(fields: [groupId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, groupId])
+  @@index([productId])
+  @@index([groupId])
+}
+
+model session {
+  sid    String   @id @db.VarChar
+  sess   Json     @db.Json
+  expire DateTime @db.Timestamp(6)
+
+  @@index([expire], map: "IDX_session_expire")
 }
 
 enum RequestStatus {

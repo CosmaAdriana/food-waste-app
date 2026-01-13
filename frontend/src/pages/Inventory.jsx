@@ -5,6 +5,7 @@ import API_URL from '../config.js';
 function Inventory() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -23,13 +24,19 @@ function Inventory() {
   });
   const [formError, setFormError] = useState('');
 
-
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareData, setShareData] = useState({ url: '', text: '' });
+
+  // State pentru marcare disponibil cu grupuri
+  const [showAvailabilityModal, setShowAvailabilityModal] = useState(false);
+  const [productToMark, setProductToMark] = useState(null);
+  const [selectedGroups, setSelectedGroups] = useState([]);
+  const [availabilityMode, setAvailabilityMode] = useState('all');
 
   useEffect(() => {
     fetchProducts();
     fetchCategories();
+    fetchGroups();
   }, []);
 
   const fetchProducts = async () => {
@@ -51,6 +58,17 @@ function Inventory() {
       setCategories(res.data.categories);
     } catch (err) {
       console.error('Nu s-au putut încărca categoriile', err);
+    }
+  };
+
+  const fetchGroups = async () => {
+    try {
+      const res = await axios.get(`${API_URL}/api/groups`, {
+        withCredentials: true
+      });
+      setGroups(res.data.groups);
+    } catch (err) {
+      console.error('Nu s-au putut încărca grupurile', err);
     }
   };
 
@@ -164,26 +182,68 @@ function Inventory() {
     }
   };
 
-  const handleToggleAvailability = async (productId, productName, currentStatus) => {
-    const newStatus = !currentStatus;
-    const message = newStatus
-      ? `Marchezi "${productName}" ca disponibil pentru prieteni?`
-      : `Marchezi "${productName}" ca indisponibil?`;
+  const handleToggleAvailability = async (product) => {
+    if (product.isAvailable) {
+      // Marcheaza ca indisponibil
+      const confirmMark = window.confirm(`Marchezi "${product.name}" ca indisponibil?`);
+      if (!confirmMark) return;
 
-    const confirmMark = window.confirm(message);
-    if (!confirmMark) return;
+      try {
+        await axios.put(`${API_URL}/api/foods/${product.id}`, {
+          isAvailable: false,
+          groupIds: []
+        }, {
+          withCredentials: true
+        });
+        fetchProducts();
+      } catch (err) {
+        alert('Eroare la modificarea statusului produsului');
+      }
+    } else {
+      // Marchează ca disponibil - deschide modal pentru selecție grupuri
+      setProductToMark(product);
+      setSelectedGroups([]);
+      setAvailabilityMode('all');
+      setShowAvailabilityModal(true);
+    }
+  };
+
+  const confirmMarkAvailable = async () => {
+    if (!productToMark) return;
 
     try {
-      await axios.put(`${API_URL}/api/foods/${productId}`, {
-        isAvailable: newStatus
-      }, {
+      const requestData = {
+        isAvailable: true
+      };
+
+      if (availabilityMode === 'groups' && selectedGroups.length > 0) {
+        requestData.groupIds = selectedGroups;
+      } else {
+        requestData.groupIds = [];
+      }
+
+      await axios.put(`${API_URL}/api/foods/${productToMark.id}`, requestData, {
         withCredentials: true
       });
-      // Reincarca produsele
+
+      alert(`"${productToMark.name}" marcat ca disponibil!`);
+      setShowAvailabilityModal(false);
+      setProductToMark(null);
+      setSelectedGroups([]);
       fetchProducts();
     } catch (err) {
-      alert('Eroare la modificarea statusului produsului');
+      alert('Eroare la marcarea produsului ca disponibil');
     }
+  };
+
+  const toggleGroupSelection = (groupId) => {
+    setSelectedGroups(prev => {
+      if (prev.includes(groupId)) {
+        return prev.filter(id => id !== groupId);
+      } else {
+        return [...prev, groupId];
+      }
+    });
   };
 
   const handleShare = async (productId, productName) => {
@@ -441,10 +501,22 @@ function Inventory() {
                   {product.isAvailable ? 'Disponibil' : 'Indisponibil'}
                 </p>
 
+                {product.isAvailable && product.groups && product.groups.length > 0 && (
+                  <p>
+                    <strong>Vizibil pentru grupuri:</strong>{' '}
+                    {product.groups.map(pg => pg.group.name).join(', ')}
+                  </p>
+                )}
+                {product.isAvailable && (!product.groups || product.groups.length === 0) && (
+                  <p style={{ color: '#28a745', fontWeight: 'bold' }}>
+                    Vizibil pentru toți prietenii
+                  </p>
+                )}
+
                 {/* Butoane de acțiuni */}
                 <div className="mt-md" style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <button
-                    onClick={() => handleToggleAvailability(product.id, product.name, product.isAvailable)}
+                    onClick={() => handleToggleAvailability(product)}
                     style={{
                       backgroundColor: product.isAvailable ? '#ffc107' : '#28a745',
                       color: 'white'
@@ -583,6 +655,140 @@ function Inventory() {
                 }}
               >
                 Închide
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal pentru selecție grupuri */}
+      {showAvailabilityModal && (
+        <div
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.5)',
+            display: 'flex',
+            justifyContent: 'center',
+            alignItems: 'center',
+            zIndex: 1000
+          }}
+          onClick={() => setShowAvailabilityModal(false)}
+        >
+          <div
+            className="card"
+            style={{
+              maxWidth: '600px',
+              width: '90%',
+              padding: '30px'
+            }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>Marchează "{productToMark?.name}" ca disponibil</h3>
+            <p style={{ marginBottom: '20px', fontSize: '14px', color: '#666' }}>
+              Selectează vizibilitatea produsului:
+            </p>
+
+            {/* Radio buttons pentru mod disponibilitate */}
+            <div style={{ marginBottom: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', marginBottom: '12px', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="availabilityMode"
+                  value="all"
+                  checked={availabilityMode === 'all'}
+                  onChange={(e) => setAvailabilityMode(e.target.value)}
+                  style={{ marginRight: '10px' }}
+                />
+                <span style={{ fontWeight: availabilityMode === 'all' ? 'bold' : 'normal' }}>
+                  Toți prietenii
+                </span>
+              </label>
+
+              <label style={{ display: 'flex', alignItems: 'center', cursor: 'pointer' }}>
+                <input
+                  type="radio"
+                  name="availabilityMode"
+                  value="groups"
+                  checked={availabilityMode === 'groups'}
+                  onChange={(e) => setAvailabilityMode(e.target.value)}
+                  style={{ marginRight: '10px' }}
+                />
+                <span style={{ fontWeight: availabilityMode === 'groups' ? 'bold' : 'normal' }}>
+                  Doar anumite grupuri
+                </span>
+              </label>
+            </div>
+
+            {/* Lista de grupuri (când e selectat "groups") */}
+            {availabilityMode === 'groups' && (
+              <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
+                {groups.length === 0 ? (
+                  <p style={{ margin: 0, fontSize: '14px', color: '#666' }}>
+                    Nu ai niciun grup creat. Creează grupuri în secțiunea Prieteni.
+                  </p>
+                ) : (
+                  <>
+                    <p style={{ marginBottom: '10px', fontWeight: 'bold' }}>Selectează grupurile:</p>
+                    {groups.map(group => (
+                      <label
+                        key={group.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          marginBottom: '8px',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={selectedGroups.includes(group.id)}
+                          onChange={() => toggleGroupSelection(group.id)}
+                          style={{ marginRight: '10px' }}
+                        />
+                        <span>
+                          {group.name} ({group._count?.members || 0} {group._count?.members === 1 ? 'membru' : 'membri'})
+                        </span>
+                      </label>
+                    ))}
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Butoane acțiuni */}
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button
+                onClick={() => setShowAvailabilityModal(false)}
+                style={{
+                  backgroundColor: '#f8f9fa',
+                  color: '#333',
+                  padding: '10px 20px',
+                  border: '1px solid #ddd',
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  cursor: 'pointer'
+                }}
+              >
+                Anulează
+              </button>
+              <button
+                onClick={confirmMarkAvailable}
+                disabled={availabilityMode === 'groups' && selectedGroups.length === 0}
+                style={{
+                  backgroundColor: availabilityMode === 'groups' && selectedGroups.length === 0 ? '#ccc' : '#28a745',
+                  color: 'white',
+                  padding: '10px 20px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  fontWeight: 'bold',
+                  cursor: availabilityMode === 'groups' && selectedGroups.length === 0 ? 'not-allowed' : 'pointer'
+                }}
+              >
+                Confirmă
               </button>
             </div>
           </div>

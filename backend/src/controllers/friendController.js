@@ -3,7 +3,7 @@ import prisma from '../config/prisma.js';
 // POST /api/friends - Trimite cerere de prietenie
 export const addFriend = async (req, res) => {
   try {
-    const { friendEmail, preference } = req.body;
+    const { friendEmail } = req.body;
     const userId = req.session.userId;
 
     if (!friendEmail) {
@@ -54,22 +54,10 @@ export const addFriend = async (req, res) => {
       }
     }
 
-    if (preference) {
-      const validPreferences = ['OMNIVOR', 'VEGETARIAN', 'CARNIVOR', 'VEGAN', 'RAW_VEGAN', 'ALTCEVA'];
-      if (!validPreferences.includes(preference)) {
-        return res.status(400).json({
-          error: 'Validation error',
-          message: 'Invalid preference value'
-        });
-      }
-    }
-
-
     const friendship = await prisma.friendship.create({
       data: {
         userId: userId,
         friendId: friendUser.id,
-        preference: preference || null,
         status: 'PENDING'
       },
       include: {
@@ -149,7 +137,6 @@ export const getFriends = async (req, res) => {
       return {
         id: friendship.id,
         status: friendship.status,
-        preference: friendship.preference,
         createdAt: friendship.createdAt,
         friend: isSender ? friendship.friend : friendship.user,
         isSender: isSender,
