@@ -310,19 +310,16 @@ function Friends() {
             {groups.map(group => (
               <div key={group.id} className="card" style={{ backgroundColor: 'white' }}>
                 <h3>{group.name}</h3>
-                <p><strong>Membri:</strong> {group._count.members}</p>
-                <p><strong>Produse:</strong> {group._count.products}</p>
-
+  
                 {/* Lista membri */}
                 {group.members.length > 0 && (
                   <div style={{ marginTop: '10px' }}>
-                    <strong>Membri:</strong>
+                    <strong>Membri:</strong> {group._count.members}
                     <ul style={{ marginTop: '5px', paddingLeft: '20px' }}>
                       {group.members.map(member => {
                         const friendship = member.friendship;
-                        const friend = friendship.userId === friendship.friend.id
-                          ? friendship.user
-                          : friendship.friend;
+                        const friend = 
+                          friendship.userId === group.userId ? friendship.friend : friendship.user;
                         return (
                           <li key={member.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '5px' }}>
                             <span>{friend.name}</span>
